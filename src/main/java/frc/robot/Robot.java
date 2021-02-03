@@ -4,7 +4,15 @@
 
 package frc.robot;
 
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -19,6 +27,12 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
+  DigitalInput testSensor;
+  XboxController driverController;
+  CANSparkMax testMotor;
+  public Robot() {
+    super(0.1);
+  }
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -29,6 +43,9 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+    testSensor = new DigitalInput(2);
+    driverController = new XboxController(0);
+    testMotor = new CANSparkMax(3,MotorType.kBrushless);
   }
 
   /**
@@ -79,6 +96,16 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    double testValue = driverController.getY(Hand.kRight);
+    System.out.println(testValue);
+    testMotor.set(testValue);
+    /*boolean testValue = driverController.getRawButton(1);
+    if(testValue){
+      System.out.println("yes");
+    }else{
+      System.out.println("no");
+    }
+    */
   // hello world
   // another comment
   }
