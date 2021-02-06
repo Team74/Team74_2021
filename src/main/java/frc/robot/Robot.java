@@ -4,10 +4,12 @@
 
 package frc.robot;
 
+import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -30,6 +32,9 @@ public class Robot extends TimedRobot {
   DigitalInput testSensor;
   XboxController driverController;
   CANSparkMax testMotor;
+  AHRS gyro;
+  Ma3Encoder testEncoder;
+  SwerveModule testSwerve;
   public Robot() {
     super(0.1);
   }
@@ -46,6 +51,8 @@ public class Robot extends TimedRobot {
     testSensor = new DigitalInput(2);
     driverController = new XboxController(0);
     testMotor = new CANSparkMax(3,MotorType.kBrushless);
+    gyro = new AHRS();
+    testSwerve = new SwerveModule(1,3,2,58.0);
   }
 
   /**
@@ -96,9 +103,14 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    double testValue = driverController.getY(Hand.kRight);
-    System.out.println(testValue);
-    testMotor.set(testValue);
+    //float testFloat = gyro.getYaw();
+    //System.out.println(testFloat);
+    //double angle = testEncoder.getAngle();
+    testSwerve.GoToAngle(90);
+    //System.out.println();
+    //double testValue = driverController.getY(Hand.kRight);
+    //System.out.println(testValue);
+    //testMotor.set(testValue);
     /*boolean testValue = driverController.getRawButton(1);
     if(testValue){
       System.out.println("yes");
