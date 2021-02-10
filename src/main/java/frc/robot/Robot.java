@@ -29,6 +29,7 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
+  private double driveAngle;
   DigitalInput testSensor;
   XboxController driverController;
   CANSparkMax testMotor;
@@ -36,7 +37,7 @@ public class Robot extends TimedRobot {
   Ma3Encoder testEncoder;
   SwerveModule testSwerve;
   public Robot() {
-    super(0.1);
+    //super(0.01);
   }
 
   /**
@@ -53,6 +54,8 @@ public class Robot extends TimedRobot {
     testMotor = new CANSparkMax(3,MotorType.kBrushless);
     gyro = new AHRS();
     testSwerve = new SwerveModule(1,3,2,58.0);
+    SmartDashboard.setDefaultNumber("PID p",0.0);
+    SmartDashboard.setDefaultNumber("PID d",0.0);
   }
 
   /**
@@ -98,15 +101,31 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
-
+  public void teleopInit() {
+    double PIDp = SmartDashboard.getNumber("PID p", 0.0);
+    double PIDd = SmartDashboard.getNumber("PID d", 0.0);
+    testSwerve.SetPIDParameters(PIDp, PIDd);
+  }
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
     //float testFloat = gyro.getYaw();
     //System.out.println(testFloat);
     //double angle = testEncoder.getAngle();
-    testSwerve.GoToAngle(90);
+    double controllerDeadzone = 0.1;
+    double driveControllerRightY = -1*driverController.getY(Hand.kRight);
+    double driveControllerRightX = driverController.getX(Hand.kRight);
+    
+    if(Math.abs(driveControllerRightX)>controllerDeadzone||Math.abs(driveControllerRightY)>controllerDeadzone){
+      driveAngle = Math.atan2(driveControllerRightY,driveControllerRightX)*180/Math.PI;
+      testSwerve.GoToAngle(driveAngle);
+    }else{
+      testSwerve.StopRotation();
+    }
+    SmartDashboard.putNumber("Controller X", driveControllerRightX);
+    SmartDashboard.putNumber("Controller Y", driveControllerRightY);
+    SmartDashboard.putNumber("Target Angle", driveAngle);
+    
     //System.out.println();
     //double testValue = driverController.getY(Hand.kRight);
     //System.out.println(testValue);
