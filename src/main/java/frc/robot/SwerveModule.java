@@ -44,6 +44,10 @@ public class SwerveModule {
         
     }
 
+    public void SetDriveSpeed(double speed){
+        driveMotor.set(speed);
+    }
+
     public void StopRotation(){
         rotationMotor.set(0);
         SmartDashboard.putNumber("Current Angle", rotationEncoder.getAngle());

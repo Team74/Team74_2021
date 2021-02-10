@@ -53,7 +53,7 @@ public class Robot extends TimedRobot {
     driverController = new XboxController(0);
     testMotor = new CANSparkMax(3,MotorType.kBrushless);
     gyro = new AHRS();
-    testSwerve = new SwerveModule(1,3,2,58.0);
+    testSwerve = new SwerveModule(3,2,2,58.0);
     SmartDashboard.setDefaultNumber("PID p",0.0);
     SmartDashboard.setDefaultNumber("PID d",0.0);
   }
@@ -115,7 +115,8 @@ public class Robot extends TimedRobot {
     double controllerDeadzone = 0.1;
     double driveControllerRightY = -1*driverController.getY(Hand.kRight);
     double driveControllerRightX = driverController.getX(Hand.kRight);
-    
+    double driveSpeed = driverController.getY(Hand.kLeft)/5;
+    testSwerve.SetDriveSpeed(driveSpeed);
     if(Math.abs(driveControllerRightX)>controllerDeadzone||Math.abs(driveControllerRightY)>controllerDeadzone){
       driveAngle = Math.atan2(driveControllerRightY,driveControllerRightX)*180/Math.PI;
       testSwerve.GoToAngle(driveAngle);
