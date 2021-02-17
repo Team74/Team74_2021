@@ -15,6 +15,12 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.geometry.Translation2d;
+import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -36,6 +42,8 @@ public class Robot extends TimedRobot {
   AHRS gyro;
   Ma3Encoder testEncoder;
   SwerveModule testSwerve;
+  SwerveDrive drive;
+  SwerveModule[] module;
   public Robot() {
     //super(0.01);
   }
@@ -49,13 +57,19 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
-    testSensor = new DigitalInput(2);
+    //testSensor = new DigitalInput(2);
     driverController = new XboxController(0);
-    testMotor = new CANSparkMax(3,MotorType.kBrushless);
+    //testMotor = new CANSparkMax(3,MotorType.kBrushless);
     gyro = new AHRS();
-    testSwerve = new SwerveModule(3,2,2,58.0);
-    SmartDashboard.setDefaultNumber("PID p",0.0);
-    SmartDashboard.setDefaultNumber("PID d",0.0);
+    //testSwerve = new SwerveModule(3,2,2,58.0);
+    drive = new SwerveDrive(module = new SwerveModule[]{     //Drive Motor, Rotation Motor, Rotation Encoder, Rotation Offset
+      new SwerveModule(5,14,0,-135.79),           //Front Left
+      new SwerveModule(12,15,1,-168.49),           //Front Right
+      new SwerveModule(11,3,2,-1.58),           //Back Right
+      new SwerveModule(44,4,3,60.03)            //Back Left
+    });
+    SmartDashboard.setDefaultNumber("PID p",1.0);
+    SmartDashboard.setDefaultNumber("PID d",0.05);
   }
 
   /**
@@ -102,30 +116,56 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-    double PIDp = SmartDashboard.getNumber("PID p", 0.0);
-    double PIDd = SmartDashboard.getNumber("PID d", 0.0);
-    testSwerve.SetPIDParameters(PIDp, PIDd);
+    double PIDp = SmartDashboard.getNumber("PID p", 1.0);
+    double PIDd = SmartDashboard.getNumber("PID d", 0.05);
+    //testSwerve.SetPIDParameters(PIDp, PIDd);
   }
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    double[] angles = new double[4];
+    angles = drive.getAngle();
+
+    for(int index = 0; index<4; index++){
+        SmartDashboard.putNumber("Angle " + index, angles[index]);
+    }
+
     //float testFloat = gyro.getYaw();
     //System.out.println(testFloat);
     //double angle = testEncoder.getAngle();
     double controllerDeadzone = 0.1;
-    double driveControllerRightY = -1*driverController.getY(Hand.kRight);
-    double driveControllerRightX = driverController.getX(Hand.kRight);
-    double driveSpeed = driverController.getY(Hand.kLeft)/5;
-    testSwerve.SetDriveSpeed(driveSpeed);
-    if(Math.abs(driveControllerRightX)>controllerDeadzone||Math.abs(driveControllerRightY)>controllerDeadzone){
-      driveAngle = Math.atan2(driveControllerRightY,driveControllerRightX)*180/Math.PI;
-      testSwerve.GoToAngle(driveAngle);
-    }else{
-      testSwerve.StopRotation();
+    double driveControllerLeftY = -1*driverController.getY(Hand.kLeft);
+    double driveControllerLeftX = driverController.getX(Hand.kLeft);
+    double driveControllerRightX = -1*driverController.getX(Hand.kRight);
+    if(Math.abs(driveControllerLeftY)<controllerDeadzone){
+      driveControllerLeftY=0;
     }
-    SmartDashboard.putNumber("Controller X", driveControllerRightX);
-    SmartDashboard.putNumber("Controller Y", driveControllerRightY);
-    SmartDashboard.putNumber("Target Angle", driveAngle);
+    if(Math.abs(driveControllerLeftX)<controllerDeadzone){
+      driveControllerLeftX=0;
+    }
+    if(Math.abs(driveControllerRightX)<controllerDeadzone){
+      driveControllerRightX=0;
+    }
+    ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(
+      driveControllerLeftY,
+      driveControllerLeftX,
+      driveControllerRightX,
+      new Rotation2d(gyro.getAngle()*Math.PI/180)
+    );
+    drive.MoveSwerveDrive(speed);
+
+    for(int index = 0; index<4; index++){
+        SmartDashboard.putNumber("Swerve Module" + index, module[index].getAngle());
+    }
+
+    if(driverController.getRawButtonPressed(4)){
+      gyro.reset();
+      System.out.println("gyro reset");
+    }
+    
+    //SmartDashboard.putNumber("Controller X", driveControllerRightX);
+    //SmartDashboard.putNumber("Controller Y", driveControllerRightY);
+    //SmartDashboard.putNumber("Target Angle", driveAngle);
     
     //System.out.println();
     //double testValue = driverController.getY(Hand.kRight);
