@@ -9,6 +9,9 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
@@ -23,6 +26,7 @@ import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpiutil.math.MathUtil;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -36,6 +40,7 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private double driveAngle;
+  private boolean driverLeftBumper = false;
   DigitalInput testSensor;
   XboxController driverController;
   CANSparkMax testMotor;
@@ -44,6 +49,8 @@ public class Robot extends TimedRobot {
   SwerveModule testSwerve;
   SwerveDrive drive;
   SwerveModule[] module;
+  NetworkTable table;
+
   public Robot() {
     //super(0.01);
   }
@@ -70,6 +77,7 @@ public class Robot extends TimedRobot {
     });
     SmartDashboard.setDefaultNumber("PID p",1.0);
     SmartDashboard.setDefaultNumber("PID d",0.05);
+    table = NetworkTableInstance.getDefault().getTable("limelight");
   }
 
   /**
@@ -123,8 +131,10 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    ChassisSpeeds speed;
     double[] angles = new double[4];
     angles = drive.getAngle();
+    speed = null;
 
     for(int index = 0; index<4; index++){
         SmartDashboard.putNumber("Angle " + index, angles[index]);
@@ -133,10 +143,26 @@ public class Robot extends TimedRobot {
     //float testFloat = gyro.getYaw();
     //System.out.println(testFloat);
     //double angle = testEncoder.getAngle();
+
+    NetworkTableEntry tx = table.getEntry("tx");
+    NetworkTableEntry ty = table.getEntry("ty");
+    NetworkTableEntry ta = table.getEntry("ta");
+
+    //read values periodically
+    double x = tx.getDouble(0.0);
+    double y = ty.getDouble(0.0);
+    double area = ta.getDouble(0.0);
+
+    //post to smart dashboard periodically
+    SmartDashboard.putNumber("LimelightX", x);
+    SmartDashboard.putNumber("LimelightY", y);
+    SmartDashboard.putNumber("LimelightArea", area);
+
     double controllerDeadzone = 0.1;
     double driveControllerLeftY = -1*driverController.getY(Hand.kLeft);
     double driveControllerLeftX = driverController.getX(Hand.kLeft);
     double driveControllerRightX = -1*driverController.getX(Hand.kRight);
+
     if(Math.abs(driveControllerLeftY)<controllerDeadzone){
       driveControllerLeftY=0;
     }
@@ -146,12 +172,54 @@ public class Robot extends TimedRobot {
     if(Math.abs(driveControllerRightX)<controllerDeadzone){
       driveControllerRightX=0;
     }
-    ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(
-      driveControllerLeftY,
-      driveControllerLeftX,
-      driveControllerRightX,
-      new Rotation2d(gyro.getAngle()*Math.PI/180)
-    );
+    if(!driverController.getRawButton(6)){
+      driveControllerLeftY = driveControllerLeftY*0.5;
+      driveControllerLeftX = driveControllerLeftX*0.5;
+    }
+
+    if(driverController.getRawButtonPressed(5)){
+      driverLeftBumper = !driverLeftBumper;
+    }
+
+    if(driverController.getRawButton(2)){
+      /*if(x>10){
+        driveControllerRightX = -0.5;
+      }else if(x<-10){
+        driveControllerRightX = 0.5;
+      }else if(Math.abs(x)>5){
+        driveControllerRightX = x/-20;
+      }*/
+
+      driveControllerLeftX = 0.5;
+      driveControllerRightX = 0.75;
+      driveControllerLeftY = 0.0;
+
+      speed = new ChassisSpeeds(
+        driveControllerLeftY,
+        driveControllerLeftX,
+        driveControllerRightX
+      );
+      
+    }
+
+    if(driverLeftBumper){
+      if(Math.abs(gyro.getAngle())>5){
+        driveControllerRightX = gyro.getAngle();
+        driveControllerRightX = MathUtil.clamp(driveControllerRightX, -0.5, 0.5);
+      }else{
+        driveControllerRightX = 0; 
+      }
+    }
+
+    if(speed==null){
+      speed = ChassisSpeeds.fromFieldRelativeSpeeds(
+        driveControllerLeftY,
+        driveControllerLeftX,
+        driveControllerRightX,
+        new Rotation2d(gyro.getAngle()*Math.PI/180)
+      );
+    }
+
     drive.MoveSwerveDrive(speed);
 
     for(int index = 0; index<4; index++){
