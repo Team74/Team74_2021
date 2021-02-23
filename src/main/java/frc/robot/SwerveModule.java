@@ -18,7 +18,7 @@ public class SwerveModule {
         rotationEncoder = new Ma3Encoder(rotationEncoderPort,rotationEncoderOffsetAngle);
         angleAdjuster = new PIDController(1,0.0,0.05);
         angleAdjuster.enableContinuousInput(-180,180);
-        angleAdjuster.setTolerance(20,40);
+        angleAdjuster.setTolerance(10,20);
         angleAdjuster.reset();
     }
 

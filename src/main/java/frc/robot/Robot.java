@@ -50,6 +50,7 @@ public class Robot extends TimedRobot {
   SwerveDrive drive;
   SwerveModule[] module;
   NetworkTable table;
+  CurvedDrive autonStep1;
 
   public Robot() {
     //super(0.01);
@@ -70,11 +71,11 @@ public class Robot extends TimedRobot {
     gyro = new AHRS();
     //testSwerve = new SwerveModule(3,2,2,58.0);
     drive = new SwerveDrive(module = new SwerveModule[]{     //Drive Motor, Rotation Motor, Rotation Encoder, Rotation Offset
-      new SwerveModule(5,14,0,-135.79),           //Front Left
-      new SwerveModule(12,15,1,-168.49),           //Front Right
+      new SwerveModule(5,14,0,165.76),           //Front Left
+      new SwerveModule(12,15,1,175.15),           //Front Right
       new SwerveModule(11,3,2,-1.58),           //Back Right
       new SwerveModule(44,4,3,60.03)            //Back Left
-    });
+    }, gyro);
     SmartDashboard.setDefaultNumber("PID p",1.0);
     SmartDashboard.setDefaultNumber("PID d",0.05);
     table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -105,6 +106,10 @@ public class Robot extends TimedRobot {
     m_autoSelected = m_chooser.getSelected();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+
+    gyro.reset();
+    autonStep1 = new CurvedDrive(drive, 3, new double[][] {{50.0,0.0},{50.0,45.0},{50.0,0.0}});
+
   }
 
   /** This function is called periodically during autonomous. */
@@ -113,6 +118,7 @@ public class Robot extends TimedRobot {
     switch (m_autoSelected) {
       case kCustomAuto:
         // Put custom auto code here
+        autonStep1.curvedDrive();
         break;
       case kDefaultAuto:
       default:
@@ -126,6 +132,7 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     double PIDp = SmartDashboard.getNumber("PID p", 1.0);
     double PIDd = SmartDashboard.getNumber("PID d", 0.05);
+    SmartDashboard.putNumber("gyro", gyro.getAngle());
     //testSwerve.SetPIDParameters(PIDp, PIDd);
   }
   /** This function is called periodically during operator control. */
@@ -135,6 +142,7 @@ public class Robot extends TimedRobot {
     double[] angles = new double[4];
     angles = drive.getAngle();
     speed = null;
+    SmartDashboard.putNumber("gyro", gyro.getAngle());
 
     for(int index = 0; index<4; index++){
         SmartDashboard.putNumber("Angle " + index, angles[index]);
