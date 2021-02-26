@@ -13,17 +13,17 @@ public class CurvedDrive {
         this.steps = steps;
         this.path = path;
         //set initilized array to the array you passed in
-        currentStep = new DriveStraight(drive, path[index][0], path[index][1], false);
+        currentStep = new DriveStraight(drive, path[index][0], path[index][1], path[index][2], false);
     }
 
     public boolean curvedDrive(){
         if (currentStep.driveStraight()){
             index = index+1;
             if (index >= steps){
-                drive.stopSwerveDrive();
+                drive.stopMotors();
                 return true;
             }else{
-                currentStep = new DriveStraight(drive, path[index][0], path[index][1], false);
+                currentStep = new DriveStraight(drive, path[index][0], path[index][1], path[index][2], false);
                 //currentStep.driveStraight();
             }
         }

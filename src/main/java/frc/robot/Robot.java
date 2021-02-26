@@ -37,6 +37,10 @@ import edu.wpi.first.wpiutil.math.MathUtil;
 public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
+  private static final String kBounceAuto = "Bounce Auto";
+  private static final String kSlalomAuto = "Slalom Auto";
+  private static final String kBarrelAuto = "Barrel Auto";
+  private static final String kBallAuto = "Ball Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private double driveAngle;
@@ -50,7 +54,7 @@ public class Robot extends TimedRobot {
   SwerveDrive drive;
   SwerveModule[] module;
   NetworkTable table;
-  CurvedDrive autonStep1;
+  Auton auton;
 
   public Robot() {
     //super(0.01);
@@ -63,7 +67,10 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
+    m_chooser.addOption("Bounce Auto", kBounceAuto);
+    m_chooser.addOption("Slalom Auto", kSlalomAuto);
+    m_chooser.addOption("Barrel Auto", kBarrelAuto);
+    m_chooser.addOption("Ball Auto", kBallAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
     //testSensor = new DigitalInput(2);
     driverController = new XboxController(0);
@@ -108,23 +115,39 @@ public class Robot extends TimedRobot {
     System.out.println("Auto selected: " + m_autoSelected);
 
     gyro.reset();
-    autonStep1 = new CurvedDrive(drive, 3, new double[][] {{50.0,0.0},{50.0,45.0},{50.0,0.0}});
+    switch (m_autoSelected) {
+      case kBounceAuto:
+        // Put custom auto code here
+        auton = new AutonBounce(drive);
+
+        break;
+      case kSlalomAuto:
+        // Put custom auto code here
+        auton = new AutonSlalom(drive);
+
+        break;
+      case kBarrelAuto:
+        // Put custom auto code here
+        auton = new AutonBarrel(drive);
+
+        break;
+      case kBallAuto:
+        // Put custom auto code here
+        //auton = new AutonBall(drive);
+
+        break;    
+      case kDefaultAuto:
+      default:
+        // Put default auto code here
+        break;
+    }
 
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        autonStep1.curvedDrive();
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
+    auton.run();
   }
 
   /** This function is called once when teleop is enabled. */
@@ -133,6 +156,7 @@ public class Robot extends TimedRobot {
     double PIDp = SmartDashboard.getNumber("PID p", 1.0);
     double PIDd = SmartDashboard.getNumber("PID d", 0.05);
     SmartDashboard.putNumber("gyro", gyro.getAngle());
+    gyro.reset();
     //testSwerve.SetPIDParameters(PIDp, PIDd);
   }
   /** This function is called periodically during operator control. */
@@ -190,24 +214,80 @@ public class Robot extends TimedRobot {
     }
 
     if(driverController.getRawButton(2)){
-      /*if(x>10){
-        driveControllerRightX = -0.5;
-      }else if(x<-10){
-        driveControllerRightX = 0.5;
-      }else if(Math.abs(x)>5){
-        driveControllerRightX = x/-20;
-      }*/
+      if(area>2){
+        if(x>10){
+          driveControllerRightX = 0.2;
+        }else if(x<-10){
+          driveControllerRightX = 0.4;
+        }else{
+          driveControllerRightX = 0.3;
+        }
 
-      driveControllerLeftX = 0.5;
-      driveControllerRightX = 0.75;
-      driveControllerLeftY = 0.0;
+        driveControllerLeftX = 0.2;
+      }else{
+        if(x>10){
+          driveControllerRightX = -0.1;
+        }else if(x<-10){
+          driveControllerRightX = 0.1;
+        }else{
+          driveControllerRightX = 0.0;
+        }
+      }
+
+      if(area>6.5){
+        driveControllerLeftY = -0.1;
+      }else if(area<5.5){
+        driveControllerLeftY = 0.1;
+      }else{
+        driveControllerLeftY = 0.0;
+      }
+
 
       speed = new ChassisSpeeds(
         driveControllerLeftY,
         driveControllerLeftX,
         driveControllerRightX
       );
-      
+    }
+
+    if(driverController.getRawButton(1)){
+      if(area>2){
+        if(x<-10){
+          driveControllerRightX = -0.2;
+        }else if(x>10){
+          driveControllerRightX = -0.4;
+        }else{
+          driveControllerRightX = -0.3;
+        }
+
+        driveControllerLeftX = -0.2;
+
+      }else{
+        if(x>10){
+          driveControllerRightX = -0.1;
+        }else if(x<-10){
+          driveControllerRightX = 0.1;
+        }else{
+          driveControllerRightX = 0.0;
+        }
+      }
+
+
+
+      if(area>6.5){
+        driveControllerLeftY = -0.1;
+      }else if(area<5.5){
+        driveControllerLeftY = 0.1;
+      }else{
+        driveControllerLeftY = 0.0;
+      }
+
+
+      speed = new ChassisSpeeds(
+        driveControllerLeftY,
+        driveControllerLeftX,
+        driveControllerRightX
+      );
     }
 
     if(driverLeftBumper){

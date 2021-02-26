@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpiutil.math.MathUtil;
 
 public class SwerveDrive {
@@ -32,8 +33,10 @@ public class SwerveDrive {
         angleAdjuster.enableContinuousInput(-180,180);
         angleAdjuster.setTolerance(20,40);
         angleAdjuster.reset();
-        robotAngle = new PIDController(1,0.0,0.20);
-        robotAngle.setTolerance(20,40);
+        //robotAngle = new PIDController(SmartDashboard.getNumber("PID p", 1.0),0.0,SmartDashboard.getNumber("PID d", 0.05));
+        robotAngle = new PIDController(5.0,0.0,0.0);
+        robotAngle.enableContinuousInput(-180, 180);
+        robotAngle.setTolerance(5,10);
         robotAngle.reset();
     }
 
@@ -47,7 +50,7 @@ public class SwerveDrive {
     }
 
     public void moveSwerveDriveAbsoluteAngle(double speed, double angle){
-        double gyroAngle = normalizeAngle(gyro.getAngle());
+        double gyroAngle = normalizeAngle2(gyro.getAngle());
         double rotation = robotAngle.calculate(gyroAngle,angle);
         rotation = rotation/180;
         rotation = MathUtil.clamp(rotation,-1.0,1.0);
@@ -61,10 +64,20 @@ public class SwerveDrive {
     }
 
     public void moveSwerveDriveAngle(double speed, double angle, double robotAngle){
-        double gyroAngle = normalizeAngle(gyro.getAngle());
+        double gyroAngle = normalizeAngle2(gyro.getAngle());
+        SmartDashboard.putNumber("gyeoAngle", gyroAngle);
         double rotation = this.robotAngle.calculate(gyroAngle,robotAngle);
+        SmartDashboard.putNumber("rotation", rotation);
         rotation = rotation/180;
         rotation = MathUtil.clamp(rotation,-1.0,1.0);
+
+        if(this.robotAngle.atSetpoint()){
+            //System.out.println("At Set Angle");
+            rotation = 0.0;
+        } else{
+            rotation = -1*rotation;
+        }
+
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             speed,
             0,
@@ -76,9 +89,9 @@ public class SwerveDrive {
 
     public void stopSwerveDrive(){
         ChassisSpeeds speeds = new ChassisSpeeds(
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
         );
         MoveSwerveDrive(speeds);
     }
@@ -91,7 +104,27 @@ public class SwerveDrive {
         return angles;
     }
 
-    private double normalizeAngle(double angle) {return ((angle%360)+360)%360-180;}
+    public double getGyro(){
+        return normalizeAngle2(gyro.getAngle());
+    }
+
+    public void stopMotors(){
+        for(int index = 0; index<4; index++){
+            module[index].stopMotor();
+        }
+    }
+
+    private double normalizeAngle(double angle) {return ((angle%360)+180)%360-180;}
+
+    private double normalizeAngle2(double angle) {
+        angle = angle % 360;
+        if (angle < -180) {
+            angle = angle + 360;
+        }else if(angle > 180){
+            angle = angle - 360;
+        }
+        return angle;
+    }
 
 	public void MoveSwerveDrive(double d, double angle) {
 	}
