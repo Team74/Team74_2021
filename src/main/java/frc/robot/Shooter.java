@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
@@ -21,6 +22,7 @@ public class Shooter {
     VictorSPX indexMotor;
     PIDController angleAdjuster;
     NetworkTable table;
+    int startingPitch = 0;
 
     public Shooter(int pitchMotorPort, int rotationMotorPort,int flywheelMotorPort, int indexMotorPort){
         table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -54,6 +56,9 @@ public class Shooter {
 
         angleAdjuster.setTolerance(10,20);
         angleAdjuster.reset();
+
+        pitchMotor.configFactoryDefault(30);
+        pitchMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 30);
     }
 
     public void setFlywheelSpeed(double power){
@@ -105,6 +110,24 @@ public class Shooter {
         moveTurret(rotationSpeed, pitchSpeed);
     }
 
+    public double findPitch(){
+        double pitch = 0;
+
+        pitch = pitchMotor.getSelectedSensorPosition();
+
+        pitch = pitch*(1/5);
+        pitch = pitch + startingPitch;
+        
+
+        return pitch;
+    }
+
+    public double setTurretPitch(double targetPitch){
+        double pitchSpeed = 0;
+        pitchSpeed = angleAdjuster.calculate(targetPitch, findPitch());
+        return pitchSpeed;
+    }
+
     public void autoTurret(){
         NetworkTableEntry tx = table.getEntry("tx");
         NetworkTableEntry ty = table.getEntry("ty");
@@ -129,6 +152,8 @@ public class Shooter {
 
             rotationSpeed = 0;
         }
+
+        pitchSpeed = setTurretPitch(y);
 
         moveTurret(rotationSpeed, pitchSpeed);
     }
