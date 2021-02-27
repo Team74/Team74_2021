@@ -28,6 +28,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpiutil.math.MathUtil;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -47,6 +50,7 @@ public class Robot extends TimedRobot {
   private boolean driverLeftBumper = false;
   DigitalInput testSensor;
   XboxController driverController;
+  XboxController opController;
   CANSparkMax testMotor;
   AHRS gyro;
   Ma3Encoder testEncoder;
@@ -55,6 +59,9 @@ public class Robot extends TimedRobot {
   SwerveModule[] module;
   NetworkTable table;
   Auton auton;
+  TalonSRX testTalon;
+  Shooter shooter;
+  boolean flywheelOn = false;
 
   public Robot() {
     //super(0.01);
@@ -66,6 +73,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    testTalon = new TalonSRX(19);
+    testTalon.set(ControlMode.PercentOutput, 0.0);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("Bounce Auto", kBounceAuto);
     m_chooser.addOption("Slalom Auto", kSlalomAuto);
@@ -74,6 +83,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putData("Auto choices", m_chooser);
     //testSensor = new DigitalInput(2);
     driverController = new XboxController(0);
+    opController = new XboxController(1);
     //testMotor = new CANSparkMax(3,MotorType.kBrushless);
     gyro = new AHRS();
     //testSwerve = new SwerveModule(3,2,2,58.0);
@@ -86,6 +96,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.setDefaultNumber("PID p",1.0);
     SmartDashboard.setDefaultNumber("PID d",0.05);
     table = NetworkTableInstance.getDefault().getTable("limelight");
+    shooter = new Shooter(1,2,16,8);
   }
 
   /**
@@ -194,6 +205,8 @@ public class Robot extends TimedRobot {
     double driveControllerLeftY = -1*driverController.getY(Hand.kLeft);
     double driveControllerLeftX = driverController.getX(Hand.kLeft);
     double driveControllerRightX = -1*driverController.getX(Hand.kRight);
+
+    double opControllerRightTrigger = opController.getTriggerAxis(Hand.kRight);
 
     if(Math.abs(driveControllerLeftY)<controllerDeadzone){
       driveControllerLeftY=0;
@@ -318,7 +331,24 @@ public class Robot extends TimedRobot {
       gyro.reset();
       System.out.println("gyro reset");
     }
-    
+    SmartDashboard.putNumber("Flywheel Power", opControllerRightTrigger);
+    if(opController.getRawButtonPressed(8)){
+      flywheelOn = !flywheelOn;
+    }
+    shooter.flywheelSpeed(flywheelOn);
+
+    if(opControllerRightTrigger>0.85 && shooter.isFlywheelUpToSpeed(10000)){
+      shooter.activateShooter();
+    }
+
+    shooter.manuelTurret(opController.getPOV());
+
+    /*if(opController.getRawButton(8)){
+      shooter.flywheelSpeed(true);
+    }else{
+      shooter.setFlywheelSpeed(opControllerRightTrigger);
+    }*/
+
     //SmartDashboard.putNumber("Controller X", driveControllerRightX);
     //SmartDashboard.putNumber("Controller Y", driveControllerRightY);
     //SmartDashboard.putNumber("Target Angle", driveAngle);
