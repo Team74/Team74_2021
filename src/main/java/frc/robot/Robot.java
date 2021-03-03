@@ -73,8 +73,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    testTalon = new TalonSRX(19);
-    testTalon.set(ControlMode.PercentOutput, 0.0);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("Bounce Auto", kBounceAuto);
     m_chooser.addOption("Slalom Auto", kSlalomAuto);
@@ -96,7 +94,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.setDefaultNumber("PID p",1.0);
     SmartDashboard.setDefaultNumber("PID d",0.05);
     table = NetworkTableInstance.getDefault().getTable("limelight");
-    shooter = new Shooter(1,2,16,8);
+    shooter = new Shooter(18,19,16,21);
   }
 
   /**
@@ -337,7 +335,7 @@ public class Robot extends TimedRobot {
     }
     shooter.flywheelSpeed(flywheelOn);
 
-    if(opControllerRightTrigger>0.85 && shooter.isFlywheelUpToSpeed(10000)){
+    if(opControllerRightTrigger>0.85 && shooter.isFlywheelUpToSpeed(5000)){
       shooter.activateShooter();
     }
 

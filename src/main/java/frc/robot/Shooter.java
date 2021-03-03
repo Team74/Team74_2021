@@ -19,7 +19,7 @@ public class Shooter {
     TalonSRX pitchMotor;
     TalonSRX rotationMotor;
     TalonFX flywheelMotor;
-    VictorSPX indexMotor;
+    TalonSRX indexMotor;
     PIDController angleAdjuster;
     NetworkTable table;
     int startingPitch = 0;
@@ -28,7 +28,7 @@ public class Shooter {
         table = NetworkTableInstance.getDefault().getTable("limelight");
         pitchMotor = new TalonSRX(pitchMotorPort);
         rotationMotor = new TalonSRX(rotationMotorPort);
-        indexMotor = new VictorSPX(indexMotorPort);
+        indexMotor = new TalonSRX(indexMotorPort);
         flywheelMotor = new TalonFX(flywheelMotorPort);
                 /* Factory Default all hardware to prevent unexpected behaviour */
 		flywheelMotor.configFactoryDefault();
@@ -67,7 +67,7 @@ public class Shooter {
 
     public void flywheelSpeed(boolean power){
         if(power){
-			flywheelMotor.set(TalonFXControlMode.Velocity, 10000);
+			flywheelMotor.set(TalonFXControlMode.Velocity, 5000);
         }else{
             flywheelMotor.set(TalonFXControlMode.Velocity, 0.0);
         }
@@ -79,7 +79,7 @@ public class Shooter {
 
     public boolean isFlywheelUpToSpeed(int targetSpeed){
         double currentSpeed = flywheelMotor.getSelectedSensorVelocity(0);
-        return (currentSpeed >= (targetSpeed - 1000) && currentSpeed <= (targetSpeed + 1000));
+        return (currentSpeed >= (targetSpeed - 500) && currentSpeed <= (targetSpeed + 500));
     }
 
     public void moveTurret(double rotationSpeed, double pitchSpeed){
@@ -92,17 +92,17 @@ public class Shooter {
         double rotationSpeed;
 
         if(pov == 315||pov == 270||pov == 225){
-            rotationSpeed = -1;
+            rotationSpeed = -0.1;
         }else if(pov == 45||pov == 90||pov == 135){
-            rotationSpeed = 1;
+            rotationSpeed = 0.1;
         }else{
             rotationSpeed = 0;
         }
 
         if(pov == 135||pov == 180||pov == 225){
-            pitchSpeed = -1;
+            pitchSpeed = -0.1;
         }else if(pov == 0||pov == 45||pov == 315){
-            pitchSpeed = 1;
+            pitchSpeed = 0.1;
         }else{
             pitchSpeed = 0;
         }
@@ -148,9 +148,8 @@ public class Shooter {
         if(angleAdjuster.atSetpoint()){
 
             rotationSpeed = 0;
-        } else{
-
-            rotationSpeed = 0;
+        } else {
+            rotationSpeed = -1*rotationSpeed;
         }
 
         pitchSpeed = setTurretPitch(y);

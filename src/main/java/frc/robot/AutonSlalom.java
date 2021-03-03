@@ -3,6 +3,8 @@ package frc.robot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class AutonSlalom extends Auton{
+
+    //Initcializes the Auton Steps
     private CurvedDrive autonStep1;
     private BottleTurn autonStep2;
     private BottleTurn autonStep3;
@@ -13,17 +15,21 @@ public class AutonSlalom extends Auton{
 
     public AutonSlalom(SwerveDrive drive){
         super(drive);
+
+        //Creates the Auton Steps
         autonIndex = 1;
-        autonStep1 = new CurvedDrive(drive, 3, new double[][] {{3.0,0.0,45.0},{62.0,-45.0,45.0},{85.0,0.0,35.0}});
+        autonStep1 = new CurvedDrive(drive, 3, new double[][] {{16.0,0.0,30.0},{55.0,-60.0,30.0},{90.0,0.0,35.0}});
         autonStep2 = new BottleTurn(drive, 90, false);
         autonStep3 = new BottleTurn(drive, 0, false);
-        autonStep4 = new CurvedDrive(drive, 2, new double[][] {{18.0,135.0,-45.0},{105.0,-180.0,-90.0}});
+        autonStep4 = new CurvedDrive(drive, 2, new double[][] {{18.0,135.0,-45.0},{110.0,-180.0,-90.0}});
         autonStep5 = new BottleTurn(drive, 0, true);
-        autonStep6 = new CurvedDrive(drive, 2, new double[][] {{18.0,-135.0,45.0},{25.0,-180.0,45.0}});
+        autonStep6 = new CurvedDrive(drive, 2, new double[][] {{20.0,-135.0,45.0},{25.0,-180.0,45.0}});
     }
 
     public void run(){
-        SmartDashboard.putNumber("Auton Index", autonIndex);
+        //SmartDashboard.putNumber("Auton Index", autonIndex);
+
+        //Runs the current Auton Step
         if(autonIndex == 1){
           if(autonStep1.curvedDrive()){
             autonIndex++;

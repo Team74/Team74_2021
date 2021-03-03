@@ -2,7 +2,10 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+//Allows the Auton to be created with the Auton Class
 public class AutonBarrel extends Auton {
+
+    //Initializes the Auton Steps
     private int autonIndex = 1;
     private CurvedDrive autonStep1;
     private BottleTurn autonStep2;
@@ -15,6 +18,8 @@ public class AutonBarrel extends Auton {
 
     public AutonBarrel(SwerveDrive drive) {
         super(drive);
+
+        //Creates All of the Auton Steps
         autonIndex = 1;
         autonStep1 = new CurvedDrive(drive, 1, new double[][] {{77.0,-90.0,0.0}});
         autonStep2 = new BottleTurn(drive, 90, true);
@@ -25,10 +30,12 @@ public class AutonBarrel extends Auton {
         autonStep7 = new BottleTurn(drive, 0, false);
         autonStep8 = new CurvedDrive(drive, 1, new double[][] {{170.0,90.0,0}});
 
-        SmartDashboard. putNumber("Auton Status", 0);
+        //SmartDashboard. putNumber("Auton Status", 0);
     }
 
     public void run(){
+        //Runs the current Auton Step
+
         SmartDashboard.putNumber("Auton Index", autonIndex);
         if(autonIndex == 1){
           if(autonStep1.curvedDrive()){
@@ -63,8 +70,11 @@ public class AutonBarrel extends Auton {
                 autonIndex++;
             }
         }else{
+
+            //Stops the Swerve Drive
             super.drive.stopSwerveDrive();
-            SmartDashboard. putNumber("Auton Status", 1);
+
+            //SmartDashboard. putNumber("Auton Status", 1);
         }
     }
 }
