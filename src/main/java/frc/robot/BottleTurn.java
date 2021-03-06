@@ -44,9 +44,9 @@ public class BottleTurn {
       
               driveControllerLeftX = 0.2;
 
-              if(area>8.5){
+              if(area>6.0){
                 driveControllerLeftY = -0.1;
-              }else if(area<7.5){
+              }else if(area<4.5){
                 driveControllerLeftY = 0.1;
               }else{
                 driveControllerLeftY = 0.0;
@@ -78,9 +78,9 @@ public class BottleTurn {
                 driveControllerLeftX = -0.2;
 
                 
-                if(area>8.5){
+                if(area>6.0){
                     driveControllerLeftY = -0.1;
-                }else if(area<7.5){
+                }else if(area<4.5){
                     driveControllerLeftY = 0.1;
                 }else{
                     driveControllerLeftY = 0.0;

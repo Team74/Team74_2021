@@ -22,11 +22,11 @@ public class AutonBounce extends Auton {
         autonIndex = 1;
         autonStep1 = new CurvedDrive(drive, 4, new double[][] {{40.0,-90.0,-45.0},{40,-180,-45},{40,0,-45},{10,-45,-45}});
         autonStep2 = new BottleTurn(drive, 90, false);
-        autonStep3 = new CurvedDrive(drive, 2, new double[][] {{60.0,-165.0,0.0},{70.0,15.0,-90.0}});
+        autonStep3 = new CurvedDrive(drive, 2, new double[][] {{60.0,-167.5,0.0},{70.0,12.5,-90.0}});
         autonStep4 = new BottleTurn(drive, -180, false);
         autonStep5 = new CurvedDrive(drive, 1, new double[][] {{25.0,-85.0,-180.0}});
         autonStep6 = new BottleTurn(drive, 90, false);
-        autonStep7 = new CurvedDrive(drive, 3, new double[][] {{70.0,-180.0,90.0},{50.0,0.0,90.0},{20.0,-90.0,90.0}});
+        autonStep7 = new CurvedDrive(drive, 3, new double[][] {{70.0,-180.0,90.0},{55.0,0.0,90.0},{20.0,-90.0,90.0}});
 
         //SmartDashboard. putNumber("Auton Status", 0);
     }

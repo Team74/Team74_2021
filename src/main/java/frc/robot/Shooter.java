@@ -67,7 +67,8 @@ public class Shooter {
 
     public void flywheelSpeed(boolean power){
         if(power){
-			flywheelMotor.set(TalonFXControlMode.Velocity, 5000);
+            //flywheelMotor.set(TalonFXControlMode.Velocity, 20000);
+            flywheelMotor.set(ControlMode.PercentOutput, 1.0);
         }else{
             flywheelMotor.set(TalonFXControlMode.Velocity, 0.0);
         }
@@ -75,6 +76,10 @@ public class Shooter {
 
     public void activateShooter(){
         indexMotor.set(ControlMode.PercentOutput, 1.0);
+    }
+
+    public void stopShooter(){
+        indexMotor.set(ControlMode.PercentOutput, 0.0);
     }
 
     public boolean isFlywheelUpToSpeed(int targetSpeed){

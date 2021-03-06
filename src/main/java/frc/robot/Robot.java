@@ -335,8 +335,10 @@ public class Robot extends TimedRobot {
     }
     shooter.flywheelSpeed(flywheelOn);
 
-    if(opControllerRightTrigger>0.85 && shooter.isFlywheelUpToSpeed(5000)){
+    if(opControllerRightTrigger>0.85 /*&& shooter.isFlywheelUpToSpeed(5000)*/){
       shooter.activateShooter();
+    }else{
+      shooter.stopShooter();
     }
 
     shooter.manuelTurret(opController.getPOV());
