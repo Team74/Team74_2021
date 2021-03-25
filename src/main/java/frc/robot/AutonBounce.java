@@ -16,7 +16,6 @@ public class AutonBounce extends Auton {
 
 
     public AutonBounce(SwerveDrive drive) {
-
         //Creates the Auton Steps
         super(drive);
         autonIndex = 1;
@@ -27,8 +26,6 @@ public class AutonBounce extends Auton {
         autonStep5 = new CurvedDrive(drive, 1, new double[][] {{25.0,-85.0,-180.0}});
         autonStep6 = new BottleTurn(drive, 90, false);
         autonStep7 = new CurvedDrive(drive, 3, new double[][] {{70.0,-180.0,90.0},{55.0,0.0,90.0},{20.0,-90.0,90.0}});
-
-        //SmartDashboard. putNumber("Auton Status", 0);
     }
 
     public void run(){

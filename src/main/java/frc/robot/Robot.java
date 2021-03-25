@@ -13,7 +13,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -48,7 +47,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private double driveAngle;
   private boolean driverLeftBumper = false;
-  DigitalInput testSensor;
+  private boolean shooterHomed = true;
   XboxController driverController;
   XboxController opController;
   CANSparkMax testMotor;
@@ -62,6 +61,8 @@ public class Robot extends TimedRobot {
   TalonSRX testTalon;
   Shooter shooter;
   boolean flywheelOn = false;
+  double[] turretPosition;
+  boolean autoTurret;
 
   public Robot() {
     //super(0.01);
@@ -79,7 +80,6 @@ public class Robot extends TimedRobot {
     m_chooser.addOption("Barrel Auto", kBarrelAuto);
     m_chooser.addOption("Ball Auto", kBallAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
-    //testSensor = new DigitalInput(2);
     driverController = new XboxController(0);
     opController = new XboxController(1);
     //testMotor = new CANSparkMax(3,MotorType.kBrushless);
@@ -95,6 +95,9 @@ public class Robot extends TimedRobot {
     SmartDashboard.setDefaultNumber("PID d",0.05);
     table = NetworkTableInstance.getDefault().getTable("limelight");
     shooter = new Shooter(18,19,16,21);
+    shooterHomed = true;
+    double[] turretPosition = {0, 0};
+    autoTurret = true;
   }
 
   /**
@@ -166,9 +169,13 @@ public class Robot extends TimedRobot {
     double PIDd = SmartDashboard.getNumber("PID d", 0.05);
     SmartDashboard.putNumber("gyro", gyro.getAngle());
     gyro.reset();
+    shooterHomed = true;
     //testSwerve.SetPIDParameters(PIDp, PIDd);
+
+    autoTurret = false;
   }
   /** This function is called periodically during operator control. */
+
   @Override
   public void teleopPeriodic() {
     ChassisSpeeds speed;
@@ -223,7 +230,7 @@ public class Robot extends TimedRobot {
     if(driverController.getRawButtonPressed(5)){
       driverLeftBumper = !driverLeftBumper;
     }
-
+    /*
     if(driverController.getRawButton(2)){
       if(area>2){
         if(x>10){
@@ -260,7 +267,7 @@ public class Robot extends TimedRobot {
         driveControllerRightX
       );
     }
-
+    
     if(driverController.getRawButton(1)){
       if(area>2){
         if(x<-10){
@@ -299,7 +306,7 @@ public class Robot extends TimedRobot {
         driveControllerLeftX,
         driveControllerRightX
       );
-    }
+    }*/
 
     if(driverLeftBumper){
       if(Math.abs(gyro.getAngle())>5){
@@ -329,11 +336,16 @@ public class Robot extends TimedRobot {
       gyro.reset();
       System.out.println("gyro reset");
     }
+
     SmartDashboard.putNumber("Flywheel Power", opControllerRightTrigger);
+
     if(opController.getRawButtonPressed(8)){
       flywheelOn = !flywheelOn;
     }
+
     shooter.flywheelSpeed(flywheelOn);
+
+    SmartDashboard.putNumber("Flywheel Speed", shooter.getFlywheelSpeed());
 
     if(opControllerRightTrigger>0.85 /*&& shooter.isFlywheelUpToSpeed(5000)*/){
       shooter.activateShooter();
@@ -341,7 +353,35 @@ public class Robot extends TimedRobot {
       shooter.stopShooter();
     }
 
-    shooter.manuelTurret(opController.getPOV());
+    if(opController.getRawButtonPressed(7)){
+      shooterHomed = false; 
+    }
+
+    if(opController.getRawButtonPressed(5)){
+      autoTurret = !autoTurret;
+    }
+
+
+    if(shooterHomed){
+      if(autoTurret){
+        shooter.autoTurret();
+      }else{
+        shooter.manuelTurret(opController.getPOV(), opController.getRawButton(1));
+      }
+      SmartDashboard.putBoolean("Turret Homed", true);
+    }else{
+      SmartDashboard.putBoolean("Turret Homed", false);
+      if(shooter.homeTurret()){
+        shooterHomed = true; 
+      }
+    }
+
+    double[] turretPosition = shooter.getTurretPosition();
+    SmartDashboard.putNumber("Turret Pitch", turretPosition[0]);
+    //SmartDashboard.putNumber("Turret Pitch", shooter.findPitch());
+    SmartDashboard.putNumber("Turret Rotation Angle Tick", turretPosition[1]);
+    SmartDashboard.putNumber("Turret Rotation Angle", shooter.findAngle());
+    //SmartDashboard.putNumber("Turret Rotation Angle Tick Output", shooter.getRotationTick(shooter.findAngle()));
 
     /*if(opController.getRawButton(8)){
       shooter.flywheelSpeed(true);
@@ -364,8 +404,6 @@ public class Robot extends TimedRobot {
       System.out.println("no");
     }
     */
-  // hello world
-  // another comment
   }
 
   /** This function is called once when the robot is disabled. */
